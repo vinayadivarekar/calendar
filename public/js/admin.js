@@ -18,8 +18,24 @@
   const createError = document.getElementById('createError');
   const usersBody = document.getElementById('usersBody');
 
+  const resetDialog = document.getElementById('resetDialog');
+  const resetForm = document.getElementById('resetForm');
+  const resetUserName = document.getElementById('resetUserName');
+  const resetError = document.getElementById('resetError');
+  let resetUserId = null;
+
+  const confirmDialog = document.getElementById('confirmDialog');
+  const confirmTitle = document.getElementById('confirmTitle');
+  const confirmMessage = document.getElementById('confirmMessage');
+  const confirmError = document.getElementById('confirmError');
+  const confirmOkBtn = document.getElementById('confirmOkBtn');
+
+  document.getElementById('resetCancelBtn').addEventListener('click', () => resetDialog.close());
+  document.getElementById('confirmCancelBtn').addEventListener('click', () => confirmDialog.close());
+
   async function loadUsers() {
     const r = await fetch('/api/users');
+    if (!r.ok) { toast('Could not load users.', 'error'); return; }
     const j = await r.json();
     usersBody.innerHTML = '';
     for (const u of j.users) {
@@ -30,42 +46,84 @@
         <td>${u.role}</td>
         <td><span class="swatch" style="background:${u.color}"></span> ${u.color}</td>
         <td class="actions">
-          <button class="btn ghost small" data-action="reset" data-id="${u.id}">Reset password</button>
+          <button class="btn ghost small" data-action="reset" data-id="${u.id}" data-name="${escapeHtml(u.name)}">Reset password</button>
           ${u.id === me.id ? '' : `<button class="btn danger small" data-action="delete" data-id="${u.id}" data-name="${escapeHtml(u.name)}">Remove</button>`}
         </td>`;
       usersBody.appendChild(tr);
     }
   }
 
-  usersBody.addEventListener('click', async (ev) => {
+  usersBody.addEventListener('click', (ev) => {
     const btn = ev.target.closest('button[data-action]');
     if (!btn) return;
     const id = btn.dataset.id;
+    const name = btn.dataset.name || 'this user';
+
     if (btn.dataset.action === 'delete') {
-      if (!confirm(`Remove ${btn.dataset.name}? Their events will also be deleted.`)) return;
-      const r = await fetch(`/api/users/${id}`, { method: 'DELETE' });
-      if (!r.ok) {
-        const b = await r.json().catch(() => ({}));
-        alert(b.error || 'Could not remove user.');
-        return;
-      }
-      loadUsers();
-    } else if (btn.dataset.action === 'reset') {
-      const pw = prompt('Enter a new temporary password (8+ characters):');
-      if (!pw) return;
-      const r = await fetch(`/api/users/${id}/reset-password`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ new_password: pw }),
+      askConfirm({
+        title: 'Remove family member',
+        message: `Remove ${name}? Their events will also be deleted.`,
+        okText: 'Remove',
+        okClass: 'danger',
+        onConfirm: async () => {
+          const r = await fetch(`/api/users/${id}`, { method: 'DELETE' });
+          if (!r.ok) {
+            const b = await r.json().catch(() => ({}));
+            throw new Error(b.error || `Could not remove user (HTTP ${r.status})`);
+          }
+          await loadUsers();
+          toast(`${name} removed.`, 'success');
+        },
       });
-      if (!r.ok) {
-        const b = await r.json().catch(() => ({}));
-        alert(b.error || 'Could not reset password.');
-      } else {
-        alert('Password reset. Share the new password with them securely.');
-      }
+    } else if (btn.dataset.action === 'reset') {
+      resetUserId = id;
+      resetUserName.textContent = name;
+      resetForm.reset();
+      resetError.hidden = true;
+      resetDialog.showModal();
     }
   });
+
+  resetForm.addEventListener('submit', async (ev) => {
+    ev.preventDefault();
+    resetError.hidden = true;
+    const data = Object.fromEntries(new FormData(resetForm).entries());
+    const r = await fetch(`/api/users/${resetUserId}/reset-password`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(data),
+    });
+    const body = await r.json().catch(() => ({}));
+    if (!r.ok) {
+      resetError.textContent = body.error || `Could not reset password (HTTP ${r.status}).`;
+      resetError.hidden = false;
+      return;
+    }
+    resetDialog.close();
+    toast(`Password reset for ${resetUserName.textContent}. Share it with them privately.`, 'success');
+  });
+
+  function askConfirm({ title, message, okText = 'Confirm', okClass = 'danger', onConfirm }) {
+    confirmTitle.textContent = title;
+    confirmMessage.textContent = message;
+    confirmError.hidden = true;
+    confirmOkBtn.textContent = okText;
+    confirmOkBtn.className = `btn ${okClass}`;
+    confirmOkBtn.onclick = async () => {
+      confirmError.hidden = true;
+      confirmOkBtn.disabled = true;
+      try {
+        await onConfirm();
+        confirmDialog.close();
+      } catch (e) {
+        confirmError.textContent = e.message || String(e);
+        confirmError.hidden = false;
+      } finally {
+        confirmOkBtn.disabled = false;
+      }
+    };
+    confirmDialog.showModal();
+  }
 
   createForm.addEventListener('submit', async (ev) => {
     ev.preventDefault();
@@ -76,15 +134,16 @@
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(data),
     });
-    const body = await r.json();
+    const body = await r.json().catch(() => ({}));
     if (!r.ok) {
-      createError.textContent = body.error || 'Could not create user.';
+      createError.textContent = body.error || `Could not create user (HTTP ${r.status}).`;
       createError.hidden = false;
       return;
     }
     createForm.reset();
     createForm.color.value = '#3b82f6';
-    loadUsers();
+    await loadUsers();
+    toast(`Account created for ${body.user.name}.`, 'success');
   });
 
   const passwordForm = document.getElementById('passwordForm');
@@ -97,10 +156,25 @@
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(data),
     });
-    const body = await r.json();
-    passwordStatus.textContent = r.ok ? 'Password updated.' : (body.error || 'Could not update password.');
-    if (r.ok) passwordForm.reset();
+    const body = await r.json().catch(() => ({}));
+    if (r.ok) {
+      passwordStatus.textContent = 'Password updated.';
+      passwordForm.reset();
+      toast('Your password was updated.', 'success');
+    } else {
+      passwordStatus.textContent = body.error || 'Could not update password.';
+    }
   });
+
+  let toastTimer = null;
+  function toast(msg, kind = '') {
+    const el = document.getElementById('toast');
+    el.textContent = msg;
+    el.className = `toast ${kind}`;
+    el.hidden = false;
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(() => { el.hidden = true; }, 4000);
+  }
 
   function escapeHtml(s) {
     return String(s).replace(/[&<>"']/g, (c) => ({

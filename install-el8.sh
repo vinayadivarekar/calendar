@@ -43,6 +43,17 @@ if command -v node >/dev/null 2>&1; then
   [[ $major -ge 22 ]] && need_node=0
 fi
 if [[ $need_node -eq 1 ]]; then
+  # Oracle Linux / RHEL 8 ships an old nodejs in the AppStream module stream
+  # (Node 10/14/16). NodeSource's Node 22 conflicts with it, so we remove the
+  # old packages and disable the module before installing from NodeSource.
+  if rpm -q nodejs >/dev/null 2>&1; then
+    log "    Removing old AppStream Node (module conflict)"
+    dnf remove -y -q nodejs nodejs-full-i18n nodejs-libs nodejs-docs npm >/dev/null 2>&1 || true
+  fi
+  if dnf module list nodejs 2>/dev/null | grep -qE '\[e\]|\[d\]\[e\]'; then
+    dnf module reset   -y -q nodejs >/dev/null 2>&1 || true
+    dnf module disable -y -q nodejs >/dev/null 2>&1 || true
+  fi
   curl -fsSL https://rpm.nodesource.com/setup_22.x | bash - >/dev/null
   dnf install -y -q nodejs >/dev/null
 fi
@@ -75,6 +86,7 @@ log "Step 6/12  Creating service user '$APP_USER'"
 if ! id "$APP_USER" >/dev/null 2>&1; then
   useradd --system --home-dir "$APP_DIR" --shell /sbin/nologin "$APP_USER"
 fi
+mkdir -p "$APP_DIR/data" "$APP_DIR/backups"
 chown -R "$APP_USER:$APP_USER" "$APP_DIR"
 
 # ---------------------------------------------------------------------------
@@ -130,7 +142,7 @@ dnf install -y -q nginx >/dev/null
 SERVER_NAME="${DOMAIN:-_}"
 cat > /etc/nginx/conf.d/family-calendar.conf <<EOF
 server {
-    listen 80;
+    listen 80 default_server;
     server_name $SERVER_NAME;
 
     location / {
@@ -144,6 +156,12 @@ server {
 }
 EOF
 rm -f /etc/nginx/conf.d/default.conf
+# Oracle Linux / RHEL ship a default_server block inside /etc/nginx/nginx.conf —
+# strip the marker so our config above wins (the welcome block stays but loses priority).
+if [[ -f /etc/nginx/nginx.conf ]] && grep -q default_server /etc/nginx/nginx.conf; then
+  cp /etc/nginx/nginx.conf /etc/nginx/nginx.conf.bak
+  sed -i 's/[[:space:]]\+default_server//g' /etc/nginx/nginx.conf
+fi
 nginx -t >/dev/null
 systemctl enable nginx >/dev/null 2>&1 || true
 systemctl restart nginx

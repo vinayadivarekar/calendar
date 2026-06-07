@@ -100,6 +100,9 @@
     selectable: true,
     selectMirror: true,
     editable: false,
+    weekNumbers: true,
+    weekNumberCalculation: 'ISO',
+    weekText: 'W',
     events: (fetchInfo, success, failure) => {
       loadEvents(fetchInfo).then(success).catch(failure);
     },

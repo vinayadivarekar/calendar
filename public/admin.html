@@ -60,6 +60,38 @@
     </section>
   </main>
 
+  <dialog id="resetDialog" class="dialog">
+    <form id="resetForm">
+      <header><h2>Reset password</h2></header>
+      <p class="muted small">Set a new temporary password for <strong id="resetUserName"></strong>. Share it with them privately so they can sign in and change it themselves.</p>
+      <label>
+        <span>New password (8+ characters)</span>
+        <input name="new_password" type="password" minlength="8" required autocomplete="new-password" />
+      </label>
+      <p id="resetError" class="error" hidden></p>
+      <footer class="actions">
+        <span class="spacer"></span>
+        <button type="button" id="resetCancelBtn" class="btn ghost">Cancel</button>
+        <button type="submit" class="btn primary">Reset password</button>
+      </footer>
+    </form>
+  </dialog>
+
+  <dialog id="confirmDialog" class="dialog">
+    <form method="dialog">
+      <header><h2 id="confirmTitle">Confirm</h2></header>
+      <p id="confirmMessage"></p>
+      <p id="confirmError" class="error" hidden></p>
+      <footer class="actions">
+        <span class="spacer"></span>
+        <button type="button" id="confirmCancelBtn" class="btn ghost">Cancel</button>
+        <button type="button" id="confirmOkBtn" class="btn danger">Remove</button>
+      </footer>
+    </form>
+  </dialog>
+
+  <div id="toast" class="toast" hidden></div>
+
   <script src="/js/admin.js"></script>
 </body>
 </html>
