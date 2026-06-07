@@ -1,0 +1,35 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Sign in &middot; Family Calendar</title>
+  <link rel="stylesheet" href="/css/style.css" />
+</head>
+<body class="auth-page">
+  <main class="auth-card">
+    <h1 id="title">Sign in</h1>
+    <p id="subtitle" class="muted">Welcome back to the family calendar.</p>
+
+    <form id="form" autocomplete="on">
+      <label id="nameLabel" class="hidden">
+        <span>Your name</span>
+        <input name="name" type="text" autocomplete="name" />
+      </label>
+      <label>
+        <span>Email</span>
+        <input name="email" type="email" autocomplete="email" required />
+      </label>
+      <label>
+        <span>Password</span>
+        <input name="password" type="password" autocomplete="current-password" minlength="8" required />
+      </label>
+      <button type="submit" id="submit" class="primary">Sign in</button>
+    </form>
+
+    <p id="error" class="error" hidden></p>
+    <p id="hint" class="muted small"></p>
+  </main>
+  <script src="/js/login.js"></script>
+</body>
+</html>

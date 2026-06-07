@@ -1,0 +1,65 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Manage family &middot; Family Calendar</title>
+  <link rel="stylesheet" href="/css/style.css" />
+</head>
+<body>
+  <header class="topbar">
+    <div class="brand">
+      <span class="logo">📅</span>
+      <span>Family Calendar</span>
+    </div>
+    <div class="topbar-right">
+      <a class="btn ghost" href="/">← Back to calendar</a>
+      <button id="logoutBtn" class="btn ghost">Sign out</button>
+    </div>
+  </header>
+
+  <main class="layout single">
+    <section class="panel">
+      <h2>Add a family member</h2>
+      <form id="createForm" class="row-form">
+        <label><span>Name</span><input name="name" required /></label>
+        <label><span>Email</span><input name="email" type="email" required /></label>
+        <label><span>Temporary password</span><input name="password" type="password" minlength="8" required autocomplete="new-password" /></label>
+        <label>
+          <span>Role</span>
+          <select name="role">
+            <option value="member" selected>Member</option>
+            <option value="admin">Admin</option>
+          </select>
+        </label>
+        <label><span>Color</span><input name="color" type="color" value="#3b82f6" /></label>
+        <button type="submit" class="btn primary">Create account</button>
+      </form>
+      <p id="createError" class="error" hidden></p>
+      <p class="muted small">Share the temporary password with them — they can change it once signed in.</p>
+    </section>
+
+    <section class="panel">
+      <h2>Family members</h2>
+      <table class="users-table">
+        <thead>
+          <tr><th>Name</th><th>Email</th><th>Role</th><th>Color</th><th></th></tr>
+        </thead>
+        <tbody id="usersBody"></tbody>
+      </table>
+    </section>
+
+    <section class="panel">
+      <h2>Change my password</h2>
+      <form id="passwordForm" class="row-form">
+        <label><span>Current password</span><input name="current_password" type="password" required autocomplete="current-password" /></label>
+        <label><span>New password</span><input name="new_password" type="password" minlength="8" required autocomplete="new-password" /></label>
+        <button type="submit" class="btn primary">Update password</button>
+      </form>
+      <p id="passwordStatus" class="muted small"></p>
+    </section>
+  </main>
+
+  <script src="/js/admin.js"></script>
+</body>
+</html>

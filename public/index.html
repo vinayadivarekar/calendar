@@ -1,0 +1,106 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Family Calendar</title>
+  <link rel="stylesheet" href="/css/style.css" />
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.15/index.global.min.css" />
+</head>
+<body>
+  <header class="topbar">
+    <div class="brand">
+      <span class="logo">📅</span>
+      <span>Family Calendar</span>
+    </div>
+    <div class="topbar-right">
+      <span id="who" class="muted small"></span>
+      <a id="adminLink" class="btn ghost hidden" href="/admin.html">Manage family</a>
+      <button id="notifyBtn" class="btn ghost" title="Enable browser reminders">🔔 Reminders</button>
+      <button id="logoutBtn" class="btn ghost">Sign out</button>
+    </div>
+  </header>
+
+  <main class="layout">
+    <aside class="sidebar">
+      <h3>Family</h3>
+      <ul id="familyList" class="legend"></ul>
+      <button id="newEventBtn" class="btn primary block">+ New event</button>
+    </aside>
+
+    <section class="calendar-wrap">
+      <div id="calendar"></div>
+    </section>
+  </main>
+
+  <dialog id="eventDialog" class="dialog">
+    <form id="eventForm" method="dialog">
+      <header>
+        <h2 id="eventDialogTitle">New event</h2>
+      </header>
+      <label>
+        <span>Title</span>
+        <input name="title" type="text" required maxlength="200" />
+      </label>
+      <div class="row">
+        <label>
+          <span>Starts</span>
+          <input name="start" type="datetime-local" required />
+        </label>
+        <label>
+          <span>Ends</span>
+          <input name="end" type="datetime-local" />
+        </label>
+      </div>
+      <label class="checkbox">
+        <input name="all_day" type="checkbox" />
+        <span>All day</span>
+      </label>
+      <label>
+        <span>Location</span>
+        <input name="location" type="text" maxlength="200" />
+      </label>
+      <label>
+        <span>Notes</span>
+        <textarea name="description" rows="3" maxlength="2000"></textarea>
+      </label>
+      <div class="row">
+        <label>
+          <span>Repeats</span>
+          <select name="repeat">
+            <option value="">Does not repeat</option>
+            <option value="FREQ=DAILY">Daily</option>
+            <option value="FREQ=WEEKLY">Weekly</option>
+            <option value="FREQ=WEEKLY;INTERVAL=2">Every 2 weeks</option>
+            <option value="FREQ=MONTHLY">Monthly</option>
+            <option value="FREQ=YEARLY">Yearly</option>
+          </select>
+        </label>
+        <label>
+          <span>Reminder</span>
+          <select name="reminder_minutes">
+            <option value="">No reminder</option>
+            <option value="0">At time of event</option>
+            <option value="5">5 minutes before</option>
+            <option value="15">15 minutes before</option>
+            <option value="30">30 minutes before</option>
+            <option value="60">1 hour before</option>
+            <option value="1440">1 day before</option>
+          </select>
+        </label>
+      </div>
+      <p id="eventError" class="error" hidden></p>
+      <footer class="actions">
+        <button type="button" id="deleteEventBtn" class="btn danger hidden">Delete</button>
+        <span class="spacer"></span>
+        <button type="button" id="cancelEventBtn" class="btn ghost">Cancel</button>
+        <button type="submit" class="btn primary" id="saveEventBtn">Save</button>
+      </footer>
+    </form>
+  </dialog>
+
+  <script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.15/index.global.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/rrule@2.8.1/dist/es5/rrule.min.js"></script>
+  <script src="/js/app.js"></script>
+</body>
+</html>
